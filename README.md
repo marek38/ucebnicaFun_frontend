@@ -1,1 +1,0 @@
-# ucebnicaFun_frontend
