@@ -6,6 +6,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+const MySQLStore = require("express-mysql-session")(session);
 
 // Middleware
 app.use(
@@ -17,12 +18,20 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+});
+
 // Set up session management
 app.use(
   session({
-    secret: "secret-key",
+    secret: "",
     resave: false,
     saveUninitialized: true,
+    store: sessionStore,
     cookie: {
       secure: true,
       httpOnly: true,
@@ -56,12 +65,14 @@ app.get("/", (req, res) => {
 
 // lgoin route
 app.post("/login", (req, res) => {
+  console.log("Received login request", req.body); 
+
   const { name, surname, password, role_id, city_id } = req.body;
 
-  console.log("Login request:", req.body);
-
-  const query =
-    "SELECT id, name, surname, password, role_id, city_id, age, category FROM front_users WHERE name = ? AND surname = ? AND role_id = ? AND city_id = ?";
+  const query = `
+    SELECT id, name, surname, password, role_id, city_id, age, category
+    FROM front_users
+    WHERE name = ? AND surname = ? AND role_id = ? AND city_id = ?`;
 
   db.query(query, [name, surname, role_id, city_id], async (err, results) => {
     if (err) {
@@ -70,7 +81,7 @@ app.post("/login", (req, res) => {
     }
 
     if (results.length === 0) {
-      console.log("User not found");
+      console.log("User not found with provided credentials");
       return res.status(401).send("User not found");
     }
 
@@ -95,7 +106,7 @@ app.post("/login", (req, res) => {
       category: user.category,
     };
 
-    console.log("Session set:", req.session.user);
+    console.log("Session set for user:", req.session.user);
     res.status(200).json({ user: req.session.user });
   });
 });
