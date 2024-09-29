@@ -23,19 +23,19 @@ const sessionStore = new MySQLStore({
   user: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  port: process.env.DB_PORT,
 });
 
-// Set up session management
 app.use(
   session({
-    secret: "",
+    secret: "your-secret-key",
     resave: false,
     saveUninitialized: true,
     store: sessionStore,
     cookie: {
-      secure: true,
+      secure: true, // Make sure this is true if you're using HTTPS
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
 );
@@ -65,7 +65,7 @@ app.get("/", (req, res) => {
 
 // lgoin route
 app.post("/login", (req, res) => {
-  console.log("Received login request", req.body); 
+  console.log("Received login request", req.body);
 
   const { name, surname, password, role_id, city_id } = req.body;
 
