@@ -15,6 +15,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,12 +29,12 @@ const sessionStore = new MySQLStore({
 
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: true,
     store: sessionStore,
     cookie: {
-      secure: true, // Make sure this is true if you're using HTTPS
+      secure: true, // Make sure you're using HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
@@ -76,7 +77,7 @@ app.post("/login", (req, res) => {
 
   db.query(query, [name, surname, role_id, city_id], async (err, results) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("Database query error:", err);
       return res.status(500).send("Database error");
     }
 
