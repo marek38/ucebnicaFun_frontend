@@ -12,9 +12,7 @@ const MySQLStore = require("express-mysql-session")(session);
 app.use(
   cors({
     origin: [
-      "https://ucebnicafun.emax-controls.eu",
-      "https://emax-controls.eu/public",
-      "https://emax-controls.eu",
+      "*"
     ],
     credentials: true, // Allow credentials
   })
