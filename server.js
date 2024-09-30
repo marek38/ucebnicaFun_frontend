@@ -16,8 +16,9 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://your-frontend-domain.com",
-      "https://another-allowed-domain.com",
+      "https://ucebnicafun.emax-controls.eu",
+      "https://emax-controls.eu/public",
+      "https://emax-controls.eu",
     ],
     credentials: true,
   })
