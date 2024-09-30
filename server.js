@@ -47,12 +47,12 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
-    saveUninitialized: false, // Don't save uninitialized sessions
+    saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: true, // Ensure HTTPS
+      secure: process.env.NODE_ENV === "production", // Set secure cookies in production
       httpOnly: true,
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Ensure cross-site cookies in production
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
