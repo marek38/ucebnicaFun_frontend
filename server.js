@@ -16,7 +16,9 @@ app.use(
       "https://emax-controls.eu/public",
       "https://emax-controls.eu"
     ],
-    credentials: true, // Allow credentials
+    credentials: true,
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'X-XSRF-TOKEN'],
+    exposedHeaders: ['*']
   })
 );
 
