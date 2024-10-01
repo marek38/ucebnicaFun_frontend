@@ -24,34 +24,36 @@ const pool = mysql.createPool({
 // Session store configuration
 const sessionStore = new MySQLStore({}, pool);
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // CORS configuration
 app.use(
   cors({
-    origin: ["https://ucebnicafun.emax-controls.eu"],
-    credentials: true, // Allow cookies across domains
+    origin: ["https://ucebnicafun.emax-controls.eu"], // Replace with your frontend domain
+    credentials: true,
   })
 );
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Session middleware
 app.use(
   session({
+    key: "session_cookie_name",
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: true, // Ensure HTTPS
+      secure: false, // Set to true if using HTTPS
       httpOnly: true,
-      sameSite: "none", // Support cross-site cookies
+      sameSite: "lax", // Use 'none' if cross-site cookies are required
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
 );
 
-// Test route to check if the server is running
+// Test route
 app.get("/", (req, res) => {
   res.send("Backend server is running");
 });
@@ -67,6 +69,7 @@ app.post(
     body("city_id").isInt().withMessage("City ID must be an integer"),
   ],
   async (req, res) => {
+    // Validation
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -134,7 +137,7 @@ app.post("/logout", (req, res) => {
     if (err) {
       return res.status(500).json({ message: "Failed to log out" });
     }
-    res.clearCookie("connect.sid");
+    res.clearCookie("session_cookie_name");
     res.status(200).json({ message: "Logged out successfully" });
   });
 });
@@ -144,23 +147,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-{
-  "name": "autoskola-fun",
-  "version": "1.0.0",
-  "description": "Your project description",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "express-mysql-session": "^2.1.8",
-    "express-rate-limit": "^7.4.0",
-    "express-session": "^1.17.1",
-    "express-validator": "^7.2.0",
-    "mysql2": "^2.3.0"
-  }
-}
