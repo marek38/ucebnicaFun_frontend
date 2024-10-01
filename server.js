@@ -10,22 +10,20 @@ const { body, validationResult } = require("express-validator");
 
 const app = express();
 
-// Middleware
+// CORS Middleware
 app.use(
   cors({
     origin: [
-      "https://ucebnicafun.emax-controls.eu/",
-      "https://emax-controls.eu/public",
-      "https://emax-controls.eu/",
+      "https://ucebnicafun.emax-controls.eu", // Correct frontend URL
     ],
-    credentials: true, // Important to allow credentials (cookies)
+    credentials: true, // Allow credentials (cookies)
   })
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Create MySQL connection pool
+// MySQL connection pool
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
@@ -33,33 +31,33 @@ const pool = mysql.createPool({
   database: process.env.DB_DATABASE,
   port: process.env.DB_PORT,
   waitForConnections: true,
-  connectionLimit: 10, // Adjust based on your server capacity
+  connectionLimit: 10,
   queueLimit: 0,
 });
 
-// Session store configuration
+// MySQL session store
 const sessionStore = new MySQLStore({}, pool);
 
-// Session middleware
+// Session Middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore, // Ensure you're using MySQL store
+    store: sessionStore,
     cookie: {
-      secure: true, // Make sure it's set to 'true' when using HTTPS
+      secure: true, // Must be 'true' for HTTPS
       httpOnly: true,
-      sameSite: "none", // To support cross-site cookies
+      sameSite: "none", // Required for cross-origin cookies
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
 );
 
-// Rate limiter middleware for login route
+// Rate limiter for login route
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit to 10 requests per windowMs
+  max: 10, 
   message: "Too many login attempts, please try again later.",
 });
 
@@ -80,10 +78,8 @@ app.post(
     body("city_id").isInt().withMessage("City ID must be an integer"),
   ],
   async (req, res) => {
-    // Validate input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.error("Validation errors:", errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -103,20 +99,16 @@ app.post(
       ]);
 
       if (results.length === 0) {
-        console.log("User not found with provided credentials");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const user = results[0];
 
-      // Check password
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        console.log("Incorrect password");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Set session after successful login
       req.session.user = {
         id: user.id,
         name: user.name,
@@ -129,13 +121,12 @@ app.post(
 
       res.status(200).json({ user: req.session.user });
     } catch (err) {
-      console.error("Database query error:", err);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
 );
 
-// Check authentication
+// Check Authentication
 app.get("/check-auth", (req, res) => {
   if (req.session.user) {
     res.status(200).json(req.session.user);
