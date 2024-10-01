@@ -1,5 +1,3 @@
-// server.js
-
 const express = require("express");
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcryptjs");
@@ -16,11 +14,11 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://ucebnicafun.emax-controls.eu",
+      "https://ucebnicafun.emax-controls.eu/",
       "https://emax-controls.eu/public",
-      "https://emax-controls.eu",
+      "https://emax-controls.eu/",
     ],
-    credentials: true,
+    credentials: true, // Important to allow credentials (cookies)
   })
 );
 
@@ -48,11 +46,11 @@ app.use(
     secret: process.env.SESSION_SECRET || "your-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: sessionStore, // Ensure you're using MySQL store
     cookie: {
-      secure: process.env.NODE_ENV === "production", // Set secure cookies in production
+      secure: true, // Make sure it's set to 'true' when using HTTPS
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Ensure cross-site cookies in production
+      sameSite: "none", // To support cross-site cookies
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
