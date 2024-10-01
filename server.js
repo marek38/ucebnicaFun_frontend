@@ -39,15 +39,15 @@ app.use(
 // Session middleware
 app.use(
   session({
-    key: "session_cookie_name",
-    secret: process.env.SESSION_SECRET || "your-secret-key",
+    key: 'session_cookie_name',
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: false, // Set to true if using HTTPS
+      secure: true, // Must be true if SameSite is 'None'
       httpOnly: true,
-      sameSite: "lax", // Use 'none' if cross-site cookies are required
+      sameSite: 'none', // Allows cross-site cookies
       maxAge: 1000 * 60 * 60 * 24, // 24 hours
     },
   })
