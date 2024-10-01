@@ -144,3 +144,23 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+{
+  "name": "autoskola-fun",
+  "version": "1.0.0",
+  "description": "Your project description",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-mysql-session": "^2.1.8",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.17.1",
+    "express-validator": "^7.2.0",
+    "mysql2": "^2.3.0"
+  }
+}
