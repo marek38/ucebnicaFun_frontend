@@ -8,6 +8,7 @@ const MySQLStore = require("express-mysql-session")(session);
 const { body, validationResult } = require("express-validator");
 
 const app = express();
+// const cors = require("cors");
 
 // MySQL connection pool
 const pool = mysql.createPool({
@@ -31,12 +32,14 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 app.use(
   cors({
-    origin: ["https://ucebnicafun.emax-controls.eu"], // Replace with your frontend domain
-    credentials: true,
+    //
+    // origin: "http://localhost:3000",
+    // origin: "https://dev-ucebnicafun.emax-controls.eu",
+    origin: "https://ucebnicafun.emax-controls.eu",
+    credentials: true, // Allow cookies
   })
 );
 
-// Session middleware
 app.use(
   session({
     key: "session_cookie_name",
@@ -45,20 +48,18 @@ app.use(
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: false, // Set to true if using HTTPS
-      httpOnly: true,
-      sameSite: "lax", // Use 'none' if cross-site cookies are required
-      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+      secure: false, //localhost false
+      httpOnly: false, //localhost false
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
 
-// Test route
 app.get("/", (req, res) => {
   res.send("Backend server is running");
 });
 
-// Login route
 app.post(
   "/login",
   [
@@ -130,7 +131,6 @@ app.get("/check-auth", (req, res) => {
     res.status(401).json({ message: "Not authenticated" });
   }
 });
-
 // Logout route
 app.post("/logout", (req, res) => {
   req.session.destroy((err) => {
@@ -141,6 +141,70 @@ app.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
   });
 });
+
+app.post(
+  "/forgot-password",
+  [
+    // Validate inputs
+    body("email").isEmail().withMessage("A valid email is required"),
+    body("name").notEmpty().withMessage("Name is required"),
+    body("surname").notEmpty().withMessage("Surname is required"),
+    body("newPassword")
+      .isLength({ min: 8 })
+      .withMessage("New password must be at least 8 characters long"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, name, surname, newPassword } = req.body;
+
+    try {
+      // Check if the user with the given email exists
+      const userQuery = `
+        SELECT id, name, surname
+        FROM front_users
+        WHERE email = ?
+      `;
+      const [users] = await pool.execute(userQuery, [email]);
+
+      if (users.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No user found with the provided email address" });
+      }
+
+      const user = users[0];
+
+      // Verify name and surname
+      if (user.name !== name || user.surname !== surname) {
+        return res.status(400).json({
+          message: "The provided name and surname do not match our records.",
+        });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update the password in the database
+      const updateQuery = `
+        UPDATE front_users
+        SET password = ?
+        WHERE id = ?
+      `;
+      await pool.execute(updateQuery, [hashedPassword, user.id]);
+
+      res
+        .status(200)
+        .json({ message: "Password reset successfully. You can now log in." });
+    } catch (err) {
+      console.error("Error during password reset:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
